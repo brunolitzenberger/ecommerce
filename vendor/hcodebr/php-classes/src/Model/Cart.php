@@ -172,8 +172,10 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 
 	':idcart'=>$this->getidcart()
 ]);
-		if(count($results) > 0){
 
+		
+		if(count($results) > 0){
+			
 			return $results[0];
 		} else {
 
@@ -183,19 +185,14 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 
 	}
 
-	public function setFreight($nrzipcode){
-
-
+	public function setFreight($nrzipcode)
+	{
 		$nrzipcode = str_replace('-', '', $nrzipcode);
-			
 		$totals = $this->getProductsTotals();
-		if ($totals['nrqtd'] > 0){
-
-			if($totals["vlheight"] < 2) $totals['vlweight'] = 2;
-			if($totals["vllength"] < 16) $totals['vllength'] = 16;
-
+		if ($totals['nrqtd'] > 0) {
+			if ($totals['vlheight'] < 2) $totals['vlheight'] = 2;
+			if ($totals['vllength'] < 16) $totals['vllength'] = 16;
 			$qs = http_build_query([
-
 				'nCdEmpresa'=>'',
 				'sDsSenha'=>'',
 				'nCdServico'=>'40010',
@@ -212,35 +209,24 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 				'sCdAvisoRecebimento'=>'S'
 			]);
 
-		
+			$xml = simplexml_load_file("http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?".$qs);
 
-
-			$xml = simplexml_load_file('http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?'.$qs);
 
 			$result = $xml->Servicos->cServico;
-
-			if($result->MsgErro != ''){
-
-				Cart::setMsgError();
-
+			if ($result->MsgErro != '') {
+				Cart::setMsgError($result->MsgErro);
+			} else {
+				Cart::clearMsgError();
 			}
-
-
 			$this->setnrdays($result->PrazoEntrega);
-			$this->setvlfreight($result->Valor);
+			$this->setvlfreight(Cart::formatValueToDecimal($result->Valor));
 			$this->setdeszipcode($nrzipcode);
-			
-			$this->save($result->MsgErro); 
-
+			$this->save();
 			return $result;
-
 		} else {
-
-			Cart::clearMsgError();
-
 		}
-
 	}
+
 
 	public static function formatValueToDecimal($value):float{
 
@@ -250,7 +236,7 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 		}
 
 
-		public static function setMsgError(){
+		public static function setMsgError($msg){
 
 			$_SESSION[Cart::SESSION_ERROR] = $msg;
 
@@ -297,10 +283,24 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 		$totals = $this->getProductsTotals();
 
 		$this->setvlsubtotal($totals['vlprice']);
+		$this->setvltotal($totals['vlprice'] + $this->getvlfreight());
 
-		$this->setvltotal($totals['vlprice'] + (float)$this->getvlfreight());
+		}
+
+		public function resetFreight(){
+
+			$totals = $this->getProductsTotals();
+
+			
+
+			if ($totals['vlprice'] === NULL){
+
+				$this->setvlfreight(0);
+				$this->save();
 
 			}
+
+		}
 }
 
  ?>
