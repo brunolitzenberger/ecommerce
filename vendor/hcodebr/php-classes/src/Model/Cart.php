@@ -276,9 +276,9 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 
 			}
 
-			public function getCalculateTotal(){
+		public function getCalculateTotal(){
 
-				$this->updateFreight();
+		$this->updateFreight();
 
 		$totals = $this->getProductsTotals();
 
