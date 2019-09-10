@@ -282,6 +282,7 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 
 		$totals = $this->getProductsTotals();
 
+
 		$this->setvlsubtotal($totals['vlprice']);
 		$this->setvltotal($totals['vlprice'] + $this->getvlfreight());
 
@@ -290,8 +291,6 @@ WHERE b.idcart = :idcart AND dtremoved is NULL;",[
 		public function resetFreight(){
 
 			$totals = $this->getProductsTotals();
-
-			
 
 			if ($totals['vlprice'] === NULL){
 
